@@ -55,7 +55,7 @@ def get_err(U, V, Y, reg=0.0):
     pass
 
 
-def train_model(M, N, K, eta, reg, Y, eps=0.0001, max_epochs=300):
+def train_model(M, N, K, eta, reg, Y, eps=0.0001, max_epochs=300, checkpoints=None):
     """
     Given a training data matrix Y containing rows (i, j, Y_ij)
     where Y_ij is user i's rating on movie j, learns an
@@ -69,6 +69,9 @@ def train_model(M, N, K, eta, reg, Y, eps=0.0001, max_epochs=300):
 
     Returns a tuple (U, V, err) consisting of U, V, and the unregularized MSE
     of the model.
+    Checkpoints is the list of epochs that we want to measure the error at.
+    If this optional parameter is used, we only return (Us, Vs, epochs), which
+    are lists of U and V matrices at the designated epochs.
     """
     
     # Generate the initial weights
@@ -81,7 +84,12 @@ def train_model(M, N, K, eta, reg, Y, eps=0.0001, max_epochs=300):
     # Keep track of errors at each epoch
     err_trace = np.zeros(max_epochs+1)
     err_trace[0] = get_err(U,V,Y,reg)
-    
+
+    # Remember Us, Vs at checkpoints
+    Us = []
+    Vs = []
+    epochs = []
+
     for s in np.arange(0,max_epochs):
         # Shuffle the data
         perm = np.random.permutation(N_data);
@@ -100,13 +108,25 @@ def train_model(M, N, K, eta, reg, Y, eps=0.0001, max_epochs=300):
         # Record the error
         err = get_err(U,V,Y,reg)        
         err_trace[s+1] = err;
+        print('Error:', err)
         
         # Check if stopping criterion satisfied
-        if np.abs(err_trace[s]-err_trace[s+1])/np.abs(err_trace[0]-err_trace[1]) < eps:
+        if np.abs((err_trace[s]-err_trace[s+1])/(err_trace[0]-err_trace[1])) < eps:
+            print('Stopped!', s)
+            Us.append(np.copy(U))
+            Vs.append(np.copy(V))
+            epochs.append(s)
             break
 
-    
-    return U,V,err
+        if s in checkpoints:
+            print('Added!', s) 
+            Us.append(np.copy(U))
+            Vs.append(np.copy(V))
+            epochs.append(s)
 
-    
-    pass
+    if checkpoints is None:
+        return U,V,get_err(U, V, Y)
+    else:
+        return Us, Vs, epochs
+
+
