@@ -145,7 +145,7 @@ def train_model(M, N, K, eta, reg, Y, eps=0.0001, max_epochs=300, checkpoints=No
             epochs.append(s)
             break
 
-        if s in checkpoints:
+        if checkpoints is not None and s in checkpoints:
             Us.append(np.copy(U))
             Vs.append(np.copy(V))
             As.append(a)
