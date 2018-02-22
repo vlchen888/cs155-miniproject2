@@ -108,18 +108,18 @@ def train_model(M, N, K, eta, reg, Y, eps=0.0001, max_epochs=300, checkpoints=No
         # Record the error
         err = get_err(U,V,Y,reg)        
         err_trace[s+1] = err;
-        print('Error:', err)
+
+        print("Epoch number", s)
+        print("Reg error", err)
         
         # Check if stopping criterion satisfied
         if np.abs((err_trace[s]-err_trace[s+1])/(err_trace[0]-err_trace[1])) < eps:
-            print('Stopped!', s)
             Us.append(np.copy(U))
             Vs.append(np.copy(V))
             epochs.append(s)
             break
 
         if s in checkpoints:
-            print('Added!', s) 
             Us.append(np.copy(U))
             Vs.append(np.copy(V))
             epochs.append(s)

@@ -13,8 +13,6 @@ def grad_U(Ui, Yij, Vj, ai, bj, reg, eta):
     DU = reg*Ui - (Yij - np.dot(Ui,Vj) - ai - bj)*Vj.T    
     return eta*DU
 
-    pass   
-
 def grad_V(Vj, Yij, Ui, ai, bj, reg, eta):
     """
     Takes as input the column vector Vj (jth column of V^T), a training point Yij,
@@ -27,8 +25,6 @@ def grad_V(Vj, Yij, Ui, ai, bj, reg, eta):
     
     DV = reg*Vj - (Yij - np.dot(Ui,Vj) - ai - bj)*Ui.T   
     return eta*DV
-
-    pass
 
 def grad_a(Ui, Yij, Vj, ai, bj, reg, eta):
     """
@@ -43,8 +39,6 @@ def grad_a(Ui, Yij, Vj, ai, bj, reg, eta):
     DV = -(Yij - np.dot(Ui,Vj) - ai - bj)
     return eta*DV
 
-    pass
-
 def grad_b(Ui, Yij, Vj, ai, bj, reg, eta):
     """
     Takes as input the column vector Vj (jth column of V^T), a training point Yij,
@@ -57,8 +51,6 @@ def grad_b(Ui, Yij, Vj, ai, bj, reg, eta):
     
     DV = -(Yij - np.dot(Ui,Vj) - ai - bj)
     return eta*DV
-
-    pass
 
 def get_err(U, V, a, b, Y, reg=0.0):
     """
@@ -82,10 +74,8 @@ def get_err(U, V, a, b, Y, reg=0.0):
     
     return 0.5*err/float(Y.shape[0])
 
-    pass
 
-
-def train_model(M, N, K, eta, reg, Y, eps=0.0001, max_epochs=300):
+def train_model(M, N, K, eta, reg, Y, eps=0.0001, max_epochs=300, checkpoints=None):
     """
     Given a training data matrix Y containing rows (i, j, Y_ij)
     where Y_ij is user i's rating on movie j, learns an
@@ -114,6 +104,13 @@ def train_model(M, N, K, eta, reg, Y, eps=0.0001, max_epochs=300):
     err_trace = np.zeros(max_epochs+1)
     err_trace[0] = get_err(U,V,a,b,Y,reg)
     
+    # Remember Us, Vs, as, bs at checkpoints
+    Us = []
+    Vs = []
+    As = []
+    Bs = []
+    epochs = []
+
     for s in np.arange(0,max_epochs):
         # Shuffle the data
         perm = np.random.permutation(N_data);
@@ -134,13 +131,30 @@ def train_model(M, N, K, eta, reg, Y, eps=0.0001, max_epochs=300):
         # Record the error
         err = get_err(U,V,a,b,Y,reg)        
         err_trace[s+1] = err;
+
+        print("Epoch number", s)
+        print("Reg error", err)
         
         # Check if stopping criterion satisfied
         if np.abs(err_trace[s]-err_trace[s+1])/np.abs(err_trace[0]-err_trace[1]) < eps:
+
+            Us.append(np.copy(U))
+            Vs.append(np.copy(V))
+            As.append(a)
+            Bs.append(b)
+            epochs.append(s)
             break
 
-    
-    return U,V,a,b,err
+        if s in checkpoints:
+            Us.append(np.copy(U))
+            Vs.append(np.copy(V))
+            As.append(a)
+            Bs.append(b)
+            epochs.append(s)
 
     
-    pass
+    if checkpoints is None:
+        return U,V,a,b,err
+    else:
+        return Us, Vs, As, Bs, epochs
+
